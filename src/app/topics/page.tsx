@@ -11,9 +11,14 @@ export default function TopicsPage() {
 
   const fetchTopics = () => {
     fetch("/api/questions/topics")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
       .then((data) => {
-        setSubjects(data);
+        if (Array.isArray(data)) {
+          setSubjects(data);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));

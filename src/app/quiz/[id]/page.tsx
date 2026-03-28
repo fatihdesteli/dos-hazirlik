@@ -26,10 +26,29 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Once sessionStorage'dan kontrol et (yeni olusturulmus quiz)
+    const cached = sessionStorage.getItem(`quiz_${quizId}`);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        if (data.quizId && data.questions?.length > 0) {
+          setQuiz({ id: data.quizId, questions: data.questions, mode: data.mode || "mixed" });
+          setLoading(false);
+          sessionStorage.removeItem(`quiz_${quizId}`);
+          return;
+        }
+      } catch { /* fall through to API */ }
+    }
+
     fetch(`/api/quiz/${quizId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
       .then((data) => {
-        setQuiz(data);
+        if (data.id && data.questions) {
+          setQuiz(data);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -78,10 +97,12 @@ export default function QuizPage() {
     );
   }
 
-  if (!quiz) {
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) {
     return (
       <div className="max-w-2xl mx-auto">
-        <p className="text-gray-400">Quiz bulunamadi.</p>
+        <p className="text-gray-400">
+          {!quiz ? "Quiz bulunamadi." : "Bu quiz icin soru bulunamadi. Once konular sayfasindan soru uretin."}
+        </p>
       </div>
     );
   }

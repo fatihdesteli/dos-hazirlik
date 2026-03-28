@@ -52,8 +52,17 @@ function QuizSetup() {
         body: JSON.stringify(config),
       });
 
+      if (!res.ok) throw new Error("Quiz olusturulamadi");
+
       const data = await res.json();
       if (data.quizId) {
+        // Sorulari sessionStorage'a kaydet (GET endpoint henuz cevaplanmamis sorulari donduremez)
+        if (data.questions && data.questions.length > 0) {
+          sessionStorage.setItem(
+            `quiz_${data.quizId}`,
+            JSON.stringify(data)
+          );
+        }
         router.push(`/quiz/${data.quizId}`);
       }
     } catch (err) {
